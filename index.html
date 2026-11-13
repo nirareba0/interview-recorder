@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>録音テスト</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="録音テスト">
+<meta name="theme-color" content="#101a3c">
+<style>
+:root{--navy:#101a3c;--gold:#ffd91a;--ink:#16203f;--mute:#6b7390;--ok:#1fa35a;--ng:#d8344f;--line:#dfe3f1}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--navy);color:#fff;font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+.wrap{max-width:480px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
+h1{font-size:20px;margin:0;font-weight:800}
+.lead{font-size:13px;color:#c8cfea;margin:4px 0 16px}
+.card{background:#fff;color:var(--ink);border-radius:16px;padding:16px;margin:0 0 14px}
+.card h2{font-size:14px;margin:0 0 8px;color:var(--mute);font-weight:700}
+.time{font-size:56px;font-weight:800;text-align:center;letter-spacing:.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.state{text-align:center;font-weight:700;font-size:14px;margin-top:2px;color:var(--mute)}
+.state.rec{color:var(--ng)}
+.meter{height:10px;background:#eef0f7;border-radius:99px;overflow:hidden;margin:12px 0 4px}
+.meter i{display:block;height:100%;width:0;background:var(--ok);transition:width .12s linear}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:16px;font:inherit;font-size:18px;font-weight:800;cursor:pointer;margin-top:12px}
+.btn.start{background:var(--ng);color:#fff}.btn.stop{background:var(--ink);color:#fff}.btn.sub{background:#eef0f7;color:var(--ink);font-size:15px;padding:12px}
+.btn[disabled]{opacity:.45}
+label.opt{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin-top:12px}
+label.opt input{width:22px;height:22px;flex:none;margin-top:1px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;margin:0}
+.kv dt{color:var(--mute)}.kv dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
+.verdict{font-size:17px;font-weight:800;margin:0 0 10px}.verdict.ok{color:var(--ok)}.verdict.ng{color:var(--ng)}
+audio{width:100%;margin-top:10px}
+.log{font-size:12px;color:#39415f;background:#f3f5fb;border-radius:10px;padding:10px;max-height:180px;overflow:auto;white-space:pre-wrap;word-break:break-all;margin-top:10px}
+ol{padding-left:20px;margin:0;font-size:14px}ol li{margin:0 0 6px}
+.small{font-size:12px;color:var(--mute);margin:8px 0 0}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>録音テスト</h1>
+  <p class="lead">画面を消しても、長い録音が最後まで残るかを確かめるページ。録音はこの端末の中だけにあり、どこにも送りません。</p>
+
+  <section class="card">
+    <div class="time" id="time">00:00</div>
+    <div class="state" id="state">まだ録音していません</div>
+    <div class="meter"><i id="level"></i></div>
+    <label class="opt"><input type="checkbox" id="keep"><span>画面をつけたままにする<br><span style="color:var(--mute);font-size:12px">外すと、ふつうに画面が消えます（消えても録れるかのテスト）</span></span></label>
+    <button class="btn start" id="start">録音をはじめる</button>
+    <button class="btn stop hide" id="stop">録音を止める</button>
+    <p class="small" id="support"></p>
+  </section>
+
+  <section class="card hide" id="result">
+    <h2>結果</h2>
+    <p class="verdict" id="verdict"></p>
+    <dl class="kv" id="kv"></dl>
+    <audio id="player" controls preload="metadata"></audio>
+    <button class="btn sub" id="save">録音ファイルを保存・共有する</button>
+    <button class="btn sub" id="copy">結果をコピーする（Claude に貼る用）</button>
+    <div class="log" id="log"></div>
+  </section>
+
+  <section class="card hide" id="recover">
+    <h2>前回の録音が残っています</h2>
+    <p style="font-size:14px;margin:0" id="recoverText"></p>
+    <button class="btn sub" id="recoverGo">取り出す</button>
+    <button class="btn sub" id="recoverDel">消す</button>
+  </section>
+
+  <section class="card">
+    <h2>試し方</h2>
+    <ol>
+      <li>「録音をはじめる」を押して、マイクを許可する</li>
+      <li>テスト1: そのまま画面を消して（横のボタン）、10分置く。もどって「録音を止める」</li>
+      <li>テスト2: 録音中にほかのアプリへ切り替えて、数分後にもどる</li>
+      <li>テスト3: 「画面をつけたままにする」を入れて、60分</li>
+      <li>毎回「結果をコピーする」を押して、Claude に貼る</li>
+    </ol>
+    <p class="small">ホーム画面に追加して開いた場合と、Safari のまま開いた場合で結果が違うことがあります。両方試せると確かです。</p>
+  </section>
+</div>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const fmt = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(x).padStart(2, '0'); };
+const clock = (t) => new Date(t).toLocaleTimeString('ja-JP', { hour12: false });
+const SLICE = 10000;           // 10秒ごとに録音のかけらを受け取る
+const GAP = SLICE * 1.8;       // かけらの間がこれより空いたら「途切れ」
+
+let S = null;                  // いまの録音の状態
+let lock = null, raf = 0, tick = 0, lastResult = null;
+
+// ---- 端末に残す（途中で落ちても取り出せるように）----
+const db = new Promise((res) => {
+  try {
+    const r = indexedDB.open('rec-test', 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore('chunks', { autoIncrement: true }); r.result.createObjectStore('meta'); };
+    r.onsuccess = () => res(r.result); r.onerror = () => res(null);
+  } catch (e) { res(null); }
+});
+async function idb(store, mode, fn) { const d = await db; if (!d) return null; return new Promise((res) => { const tx = d.transaction(store, mode); const out = fn(tx.objectStore(store)); tx.oncomplete = () => res(out && out.result); tx.onerror = tx.onabort = () => res(null); }); }
+const saveChunk = (blob) => idb('chunks', 'readwrite', (s) => s.add(blob));
+const saveMeta = (m) => idb('meta', 'readwrite', (s) => s.put(m, 'current'));
+const clearAll = async () => { await idb('chunks', 'readwrite', (s) => s.clear()); await idb('meta', 'readwrite', (s) => s.delete('current')); };
+
+function log(msg) { if (!S) return; S.log.push(clock(Date.now()) + ' ' + msg); }
+
+function pickType() {
+  if (!window.MediaRecorder) return null;
+  for (const t of ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', '']) if (t === '' || MediaRecorder.isTypeSupported(t)) return t;
+  return '';
+}
+
+(function showSupport() {
+  const bits = [];
+  bits.push(window.MediaRecorder ? '録音: 使える（' + (pickType() || '既定の形式') + '）' : '録音: この端末・ブラウザでは使えません');
+  bits.push('wakeLock' in navigator ? '画面をつけたまま: 使える' : '画面をつけたまま: 使えない');
+  bits.push(navigator.standalone || matchMedia('(display-mode: standalone)').matches ? '開き方: ホーム画面から' : '開き方: ブラウザ');
+  $('support').textContent = bits.join(' ／ ');
+  if (!window.MediaRecorder || !navigator.mediaDevices) $('start').disabled = true;
+})();
+
+async function keepAwake(on) {
+  try {
+    if (on && 'wakeLock' in navigator) { lock = await navigator.wakeLock.request('screen'); log('画面をつけたまま: オン'); lock.addEventListener('release', () => log('画面をつけたまま: 外れた')); }
+    else if (lock) { await lock.release(); lock = null; }
+  } catch (e) { log('画面をつけたまま: 失敗 ' + e.name); }
+}
+
+async function start() {
+  $('start').disabled = true;
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: false, noiseSuppression: false, autoGainControl: true } }); }
+  catch (e) { $('state').textContent = 'マイクを使えませんでした（' + e.name + '）。設定でマイクを許可してください'; $('start').disabled = false; return; }
+  await clearAll();
+  const type = pickType();
+  const rec = new MediaRecorder(stream, type ? { mimeType: type, audioBitsPerSecond: 64000 } : { audioBitsPerSecond: 64000 });
+  S = { stream, rec, type: rec.mimeType || type, t0: Date.now(), chunks: [], times: [], gaps: [], hidden: [], hiddenAt: 0, log: [], bytes: 0, keep: $('keep').checked };
+  log('録音開始 形式=' + S.type + ' 開き方=' + (navigator.standalone ? 'ホーム画面' : 'ブラウザ'));
+  saveMeta({ t0: S.t0, type: S.type });
+  rec.ondataavailable = (ev) => {
+    if (!ev.data || !ev.data.size) return;
+    const now = Date.now(), prev = S.times.length ? S.times[S.times.length - 1] : S.t0;
+    if (now - prev > GAP) { S.gaps.push({ at: prev, ms: now - prev }); log('途切れ ' + fmt(now - prev) + '（' + clock(prev) + ' から）'); }
+    S.times.push(now); S.chunks.push(ev.data); S.bytes += ev.data.size; saveChunk(ev.data);
+  };
+  rec.onerror = (ev) => log('録音のエラー ' + (ev.error && ev.error.name));
+  rec.onpause = () => log('録音が一時停止した'); rec.onresume = () => log('録音が再開した');
+  rec.onstop = finish;
+  const tr = stream.getAudioTracks()[0];
+  tr.onmute = () => log('マイクが止められた（mute）'); tr.onunmute = () => log('マイクがもどった（unmute）'); tr.onended = () => log('マイクが切れた（ended）');
+  rec.start(SLICE);
+  if (S.keep) await keepAwake(true);
+  // 音量の目盛り（録れているかの目安。画面が消えているあいだは止まってよい）
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC(); const an = ac.createAnalyser(); an.fftSize = 512;
+    ac.createMediaStreamSource(stream).connect(an); const buf = new Uint8Array(an.fftSize); S.ac = ac;
+    const draw = () => { an.getByteTimeDomainData(buf); let p = 0; for (const v of buf) p = Math.max(p, Math.abs(v - 128)); $('level').style.width = Math.min(100, p / 128 * 180) + '%'; raf = requestAnimationFrame(draw); };
+    draw();
+  } catch (e) { log('音量の目盛りは使えない ' + e.name); }
+  tick = setInterval(() => { $('time').textContent = fmt(Date.now() - S.t0); }, 500);
+  $('state').textContent = '録音中'; $('state').className = 'state rec';
+  $('start').classList.add('hide'); $('stop').classList.remove('hide'); $('result').classList.add('hide'); $('keep').disabled = true;
+}
+
+function stop() {
+  if (!S || S.rec.state === 'inactive') return;
+  $('stop').disabled = true; log('止めるを押した'); S.tStop = Date.now();
+  try { S.rec.stop(); } catch (e) { log('止めるときのエラー ' + e.name); finish(); }
+}
+
+async function finish() {
+  if (!S || S.done) return; S.done = true;
+  clearInterval(tick); cancelAnimationFrame(raf); await keepAwake(false);
+  S.stream.getTracks().forEach((t) => t.stop()); if (S.ac) S.ac.close().catch(() => {});
+  const wall = (S.tStop || Date.now()) - S.t0;
+  const blob = new Blob(S.chunks, { type: S.type || 'audio/mp4' });
+  const url = URL.createObjectURL(blob);
+  const lostGap = S.gaps.reduce((n, g) => n + g.ms, 0);
+  const hiddenMs = S.hidden.reduce((n, h) => n + h, 0);
+  const player = $('player'); player.src = url;
+  const audioDur = await new Promise((res) => { let done = false; const end = (v) => { if (!done) { done = true; res(v); } }; player.onloadedmetadata = () => end(isFinite(player.duration) ? player.duration * 1000 : NaN); player.onerror = () => end(NaN); setTimeout(() => end(NaN), 4000); });
+  const expected = Math.round(wall / SLICE);
+  const short = isFinite(audioDur) ? wall - audioDur : NaN;
+  const ok = S.gaps.length === 0 && S.chunks.length >= expected - 1 && (!isFinite(short) || short < 5000);
+  const r = lastResult = {
+    ok, wall, audioDur, size: blob.size, chunks: S.chunks.length, expected, gaps: S.gaps, hiddenMs, hiddenCount: S.hidden.length, type: S.type, keep: S.keep,
+    standalone: !!(navigator.standalone || matchMedia('(display-mode: standalone)').matches), ua: navigator.userAgent, log: S.log.slice(), blob, when: new Date(S.t0).toLocaleString('ja-JP'),
+  };
+  $('verdict').textContent = ok ? '途切れなく録れています' : '途中で途切れています';
+  $('verdict').className = 'verdict ' + (ok ? 'ok' : 'ng');
+  const rows = [
+    ['はじめてから止めるまで', fmt(wall)],
+    ['録音ファイルの長さ', isFinite(audioDur) ? fmt(audioDur) + (short > 5000 ? '（' + fmt(short) + ' 足りない）' : '') : '読み取れず（下で再生して確かめる）'],
+    ['録音のかけら', S.chunks.length + ' 個（途切れなければ 約' + expected + ' 個）'],
+    ['途切れ', S.gaps.length ? S.gaps.length + ' 回・合計 ' + fmt(lostGap) : 'なし'],
+    ['画面が消えていた・裏にいた時間', S.hidden.length ? S.hidden.length + ' 回・合計 ' + fmt(hiddenMs) : 'なし'],
+    ['ファイルの大きさ', (blob.size / 1048576).toFixed(2) + ' MB（' + (S.type || '形式不明') + '）'],
+    ['画面をつけたまま', S.keep ? 'オン' : 'オフ'],
+    ['開き方', r.standalone ? 'ホーム画面から' : 'ブラウザ'],
+  ];
+  $('kv').innerHTML = rows.map(([k, v]) => '<dt>' + k + '</dt><dd>' + v + '</dd>').join('');
+  $('log').textContent = S.log.join('\n');
+  $('result').classList.remove('hide');
+  $('state').textContent = '止めました'; $('state').className = 'state';
+  $('stop').classList.add('hide'); $('stop').disabled = false; $('start').classList.remove('hide'); $('start').disabled = false; $('start').textContent = 'もう一度録音する'; $('keep').disabled = false;
+  $('level').style.width = '0';
+  document.body.dataset.done = ok ? 'ok' : 'ng';
+  S = null;
+}
+
+function summary(r) {
+  return ['【録音テストの結果】' + r.when,
+    '判定: ' + (r.ok ? '途切れなし' : '途切れあり'),
+    '止めるまで: ' + fmt(r.wall) + ' ／ ファイルの長さ: ' + (isFinite(r.audioDur) ? fmt(r.audioDur) : '読み取れず'),
+    'かけら: ' + r.chunks + ' 個（見込み 約' + r.expected + '）／ 途切れ: ' + (r.gaps.length ? r.gaps.map((g) => clock(g.at) + 'から' + fmt(g.ms)).join('、') : 'なし'),
+    '画面が消えていた・裏にいた: ' + r.hiddenCount + ' 回・合計 ' + fmt(r.hiddenMs),
+    '大きさ: ' + (r.size / 1048576).toFixed(2) + ' MB ／ 形式: ' + r.type,
+    '画面をつけたまま: ' + (r.keep ? 'オン' : 'オフ') + ' ／ 開き方: ' + (r.standalone ? 'ホーム画面から' : 'ブラウザ'),
+    '端末: ' + r.ua, '--- 記録 ---', ...r.log].join('\n');
+}
+
+$('start').onclick = start;
+$('stop').onclick = stop;
+$('copy').onclick = async () => {
+  if (!lastResult) return; const t = summary(lastResult);
+  try { await navigator.clipboard.writeText(t); $('copy').textContent = 'コピーしました'; }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); $('copy').textContent = 'コピーしました'; }
+  setTimeout(() => { $('copy').textContent = '結果をコピーする（Claude に貼る用）'; }, 2000);
+};
+function fileOf(blob, type, t0) { const ext = /mp4/.test(type) ? 'm4a' : 'webm'; const d = new Date(t0); const p = (n) => String(n).padStart(2, '0'); return new File([blob], 'rec-test-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + '.' + ext, { type: blob.type || 'audio/mp4' }); }
+async function share(file) {
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; } } catch (e) { if (e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
+}
+$('save').onclick = () => { if (lastResult) share(fileOf(lastResult.blob, lastResult.type, Date.now() - lastResult.wall)); };
+
+// 画面が消えた・裏に回った・もどった、を記録する
+document.addEventListener('visibilitychange', () => {
+  if (!S) return;
+  if (document.hidden) { S.hiddenAt = Date.now(); log('画面が消えた／裏に回った'); }
+  else { if (S.hiddenAt) { S.hidden.push(Date.now() - S.hiddenAt); log('もどった（' + fmt(Date.now() - S.hiddenAt) + ' ぶり）録音の状態=' + S.rec.state + ' マイク=' + (S.stream.getAudioTracks()[0] || {}).readyState); S.hiddenAt = 0; } if (S.keep) keepAwake(true); }
+});
+for (const ev of ['freeze', 'resume', 'pagehide', 'pageshow']) addEventListener(ev, () => log('ページ: ' + ev), { capture: true });
+
+// 途中で落ちたときの取り出し
+(async function recover() {
+  const meta = await idb('meta', 'readonly', (s) => s.get('current'));
+  const n = await idb('chunks', 'readonly', (s) => s.count());
+  if (!meta || !n) return;
+  $('recoverText').textContent = new Date(meta.t0).toLocaleString('ja-JP') + ' にはじめた録音のかけらが ' + n + ' 個（約 ' + fmt(n * SLICE) + '）残っています。';
+  $('recover').classList.remove('hide');
+  $('recoverGo').onclick = async () => { const parts = await idb('chunks', 'readonly', (s) => s.getAll()); share(fileOf(new Blob(parts, { type: meta.type || 'audio/mp4' }), meta.type || '', meta.t0)); };
+  $('recoverDel').onclick = async () => { await clearAll(); $('recover').classList.add('hide'); };
+})();
+
+// 機械で確かめる用（?autotest=秒）。押さなくても録音して止める
+const auto = new URLSearchParams(location.search).get('autotest');
+if (auto) start().then(() => setTimeout(stop, Math.max(3, +auto) * 1000));
+</script>
+</body>
+</html>
